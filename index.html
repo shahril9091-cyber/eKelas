@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SISTEM MAKLUMAT KELAS</title>
+<link rel="icon" type="image/png" href="assets/logo.png">
+<style>
+  :root {
+    --bg: #f5f6f8; --surface: #ffffff; --ink: #1b2430; --muted: #5f6b7a; --line: #e2e6ec;
+    --head: #14284b; --brand: #1e3a6e; --brand-ink: #ffffff; --brand-soft: #e6ecf7;
+    --lelaki: #2563eb; --perempuan: #d6336c; --warn: #b45309; --warn-soft: #fef3c7; --err: #b42318; --err-soft: #fde8e6; --ok: #146c43; --ok-soft: #e0f3e8;
+    --radius: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12171d; --surface: #1a212a; --ink: #e8edf3; --muted: #9aa7b6; --line: #2b3541;
+      --head: #0e1c36; --brand: #7fa6e8; --brand-ink: #0b1830; --brand-soft: #1a2a48;
+      --lelaki: #6ea0ff; --perempuan: #ff7fac; --warn: #f0b45a; --warn-soft: #3a2c10; --err: #ff8d84; --err-soft: #3b1a17; --ok: #6fd39a; --ok-soft: #12301f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding-inline: 16px; }
+  header { background: var(--head); color: #ffffff; border-bottom: 3px solid var(--brand); }
+  header .wrap { padding-block: 18px 0; }
+  header h1 { margin: 0; font-size: 1.35rem; letter-spacing: .01em; }
+  header p { margin: 2px 0 0; opacity: .85; font-size: .9rem; }
+  .head-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px; padding-bottom: 14px; }
+  .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .logo { width: 64px; height: 64px; flex: none; }
+  .jam { text-align: right; font-variant-numeric: tabular-nums; }
+  .jam .tkh { font-size: .85rem; opacity: .85; }
+  .jam .msa { font-size: 1.5rem; font-weight: 700; line-height: 1.2; letter-spacing: .02em; }
+  nav { display: flex; gap: 4px; }
+  nav button { appearance: none; border: 0; background: transparent; color: inherit; opacity: .75; font: inherit; font-weight: 600; padding: 10px 18px; border-radius: 10px 10px 0 0; cursor: pointer; }
+  nav button[aria-selected="true"] { background: var(--bg); color: var(--ink); opacity: 1; }
+  nav button:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
+  main { flex: 1 0 auto; width: 100%; padding-block: 22px 48px; }
+  footer { background: var(--head); color: #ffffff; text-align: center; font-size: .85rem; letter-spacing: .02em; padding-block: 14px; border-top: 3px solid var(--brand); }
+  footer .wrap { opacity: .9; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+  .banner { border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; font-size: .9rem; background: var(--warn-soft); color: var(--warn); }
+  .banner.err { background: var(--err-soft); color: var(--err); }
+  .asof { color: var(--muted); font-size: .9rem; margin: 0 0 14px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+  .tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
+  .tile .lbl { color: var(--muted); font-size: .85rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .tile .num { font-size: 2.4rem; font-weight: 750; line-height: 1.15; font-variant-numeric: tabular-nums; }
+  .tile .sub { color: var(--muted); font-size: .85rem; }
+  .tile.l .num { color: var(--lelaki); } .tile.p .num { color: var(--perempuan); }
+  .bar { display: flex; height: 10px; border-radius: 6px; overflow: hidden; margin: 14px 0 4px; background: var(--line); }
+  .bar i { display: block; } .bar .l { background: var(--lelaki); } .bar .p { background: var(--perempuan); }
+
+  .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 26px 0 12px; }
+  .chip { appearance: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: .88rem; padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+  .chip[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+  .tools input[type=search] { margin-left: auto; min-width: 200px; }
+  input[type=search], input[type=password] { font: inherit; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+  :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+  .grp { margin: 22px 0 10px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+  .grp h2 { margin: 0; font-size: 1.1rem; }
+  .grp span { color: var(--muted); font-size: .88rem; font-variant-numeric: tabular-nums; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .kelas { text-align: left; font: inherit; color: inherit; cursor: pointer; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+  .kelas:hover { border-color: var(--brand); }
+  .kelas .nm { font-weight: 700; }
+  .kelas .tot { font-size: 1.8rem; font-weight: 750; font-variant-numeric: tabular-nums; margin: 4px 0 2px; }
+  .kelas .tot small { font-size: .8rem; font-weight: 500; color: var(--muted); }
+  .kelas .lp { display: flex; gap: 14px; font-size: .88rem; font-variant-numeric: tabular-nums; }
+  .kelas .lp .l { color: var(--lelaki); } .kelas .lp .p { color: var(--perempuan); }
+  .empty { text-align: center; color: var(--muted); padding: 48px 16px; }
+
+  dialog { border: 0; border-radius: 14px; padding: 0; width: min(980px, calc(100vw - 24px)); max-height: calc(100vh - 32px); background: var(--surface); color: var(--ink); }
+  dialog::backdrop { background: rgba(10, 15, 20, .55); }
+  .dlg-h { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); }
+  .dlg-h h2 { margin: 0; font-size: 1.15rem; }
+  .dlg-h .meta { color: var(--muted); font-size: .9rem; font-variant-numeric: tabular-nums; }
+  .dlg-h .meta .l { color: var(--lelaki); } .dlg-h .meta .p { color: var(--perempuan); }
+  .dlg-h .acts { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px; }
+  .dlg-b { padding: 18px 20px 22px; display: grid; gap: 16px; }
+  .fld > label, .fld > .lbl { display: block; font-weight: 600; margin-bottom: 6px; }
+  .fld select { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+  .fld .opt { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+  .fld .opt.dis { color: var(--muted); }
+  .fld .hint { color: var(--muted); font-size: .85rem; margin: 2px 0 0; }
+  .acts-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tools .btn { margin-left: auto; }
+  .tools .btn + input[type=search] { margin-left: 0; }
+  .btn { appearance: none; font: inherit; font-weight: 600; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+  .btn.primary { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+  .tbl { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { position: sticky; top: 0; background: var(--surface); font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.nama { white-space: normal; min-width: 200px; }
+  .jl { color: var(--lelaki); font-weight: 600; } .jp { color: var(--perempuan); font-weight: 600; }
+  tr.off td { color: var(--muted); }
+  .link { appearance: none; border: 0; background: none; padding: 0; font: inherit; color: var(--brand); text-decoration: underline; cursor: pointer; }
+  .badge { font-size: .75rem; padding: 2px 8px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-weight: 600; }
+  .badge.off { background: var(--warn-soft); color: var(--warn); }
+
+  .login { max-width: 380px; margin: 24px auto; }
+  .login h2, .card h2 { margin-top: 0; font-size: 1.1rem; }
+  .login form { display: flex; gap: 8px; }
+  .login input { flex: 1; min-width: 0; }
+  .msg { margin: 10px 0 0; font-size: .9rem; color: var(--err); min-height: 1.3em; }
+  .drop { display: block; border: 2px dashed var(--line); border-radius: var(--radius); padding: 34px 16px; text-align: center; cursor: pointer; color: var(--muted); }
+  .drop:hover, .drop.over { border-color: var(--brand); background: var(--brand-soft); color: var(--ink); }
+  .drop strong { color: var(--ink); display: block; font-size: 1.05rem; margin-bottom: 4px; }
+  .drop input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .drop:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .result { margin-top: 14px; padding: 12px 14px; border-radius: 10px; font-size: .92rem; }
+  .result.ok { background: var(--ok-soft); color: var(--ok); } .result.err { background: var(--err-soft); color: var(--err); } .result.wait { background: var(--brand-soft); color: var(--brand); }
+  .adm-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  .adm-head h2 { margin: 0; }
+  dl.info { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; font-size: .92rem; }
+  dl.info dt { color: var(--muted); } dl.info dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .stack > * + * { margin-top: 14px; }
+  [hidden] { display: none !important; }
+
+  /* ---- Mudah alih ---- */
+  @media screen and (max-width: 640px) {
+    .wrap { padding-inline: 14px; }
+    header .wrap { padding-block: 14px 0; }
+    .head-top { flex-direction: column; align-items: stretch; gap: 8px; padding-bottom: 10px; }
+    .logo { width: 48px; height: 48px; }
+    .brand { gap: 12px; }
+    header h1 { font-size: 1.05rem; line-height: 1.25; }
+    header p { font-size: .8rem; }
+    .jam { text-align: left; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    .jam .msa { font-size: 1.15rem; }
+    nav { gap: 2px; }
+    nav button { flex: 1; padding: 11px 8px; }
+    main { padding-block: 16px 32px; }
+    .tiles { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .tiles .tile:first-child { grid-column: 1 / -1; }
+    .tile { padding: 12px 14px; }
+    .tile .num { font-size: 2rem; }
+    .tools { margin-top: 20px; }
+    .chip { padding: 8px 14px; }
+    .tools input[type=search] { order: 1; flex: 1 1 100%; margin: 0; min-width: 0; }
+    .tools .btn { order: 2; flex: 1 1 100%; margin-left: 0; min-height: 44px; }
+    input, select, textarea { font-size: 16px !important; }
+    .btn { min-height: 42px; }
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .kelas { padding: 12px; }
+    .kelas .nm { font-size: .88rem; overflow-wrap: anywhere; }
+    .kelas .tot { font-size: 1.5rem; }
+    .kelas .lp { flex-wrap: wrap; gap: 0 10px; font-size: .82rem; }
+    .grp h2 { font-size: 1rem; }
+    .banner code { overflow-wrap: anywhere; }
+    /* Dialog skrin penuh */
+    dialog { width: 100vw; max-width: 100vw; height: 100vh; height: 100dvh; max-height: 100vh; max-height: 100dvh; margin: 0; border-radius: 0; }
+    .dlg-h { padding: 12px 14px; gap: 6px 12px; }
+    .dlg-h h2 { font-size: 1.05rem; }
+    .dlg-h .acts.multi { margin-left: 0; width: 100%; }
+    .dlg-h .acts.multi .btn { flex: 1; padding-inline: 8px; }
+    .dlg-b { padding: 14px; }
+    .acts-row .btn { flex: 1 1 100%; }
+    /* Jadual murid -> kad bersusun (label dari data-l) */
+    table.resp thead { display: none; }
+    table.resp, table.resp tbody { display: block; width: 100%; }
+    table.resp tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+    table.resp td { display: block; padding: 0; border: 0; white-space: normal; text-align: left; min-width: 0; overflow-wrap: anywhere; font-size: .85rem; }
+    table.resp td::before { content: attr(data-l); display: block; font-size: .68rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 500; }
+    table.resp td.nama { grid-column: 1 / -1; order: -1; font-weight: 700; font-size: .98rem; min-width: 0; }
+    table.resp td.num { text-align: left; }
+    .login { margin: 8px auto; }
+    .login form { flex-direction: column; }
+    .adm-head { flex-wrap: wrap; }
+    .drop { padding: 26px 12px; }
+    dl.info { grid-template-columns: 1fr; gap: 0; }
+    dl.info dd { margin-bottom: 8px; }
+  }
+
+  /* ---- Cetakan (A4). Kandungan dibina dalam #cetak sebelum window.print() ---- */
+  #cetak { display: none; }
+  @media print {
+    @page { size: A4; margin: 12mm; }
+    html, body { background: #fff !important; color: #000 !important; font-size: 11px; display: block !important; min-height: 0 !important; }
+    body > *:not(#cetak) { display: none !important; }
+    #cetak { display: block; color: #000; background: #fff; }
+    #cetak .pg { break-after: page; }
+    #cetak .pg:last-child { break-after: auto; }
+    #cetak .kp { display: flex; align-items: center; gap: 10px; }
+    #cetak .kp img { width: 46px; height: 46px; }
+    #cetak h1 { font-size: 15px; margin: 0; }
+    #cetak h2 { font-size: 13px; margin: 2px 0; }
+    #cetak p { margin: 2px 0; font-size: 10px; color: #333; }
+    #cetak .ct { font-size: 11px; color: #000; font-weight: 600; margin: 8px 0 6px; }
+    #cetak table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 4px; }
+    #cetak th, #cetak td { position: static; border: 1px solid #555; padding: 2px 5px; text-align: left; white-space: nowrap; color: #000; letter-spacing: 0; text-transform: none; }
+    #cetak td:nth-child(3), #cetak td:nth-child(6) { white-space: normal; }
+    #cetak th { background: #e5e5e5 !important; font-size: 9.5px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    #cetak th.num, #cetak td.num { text-align: right; }
+    #cetak thead { display: table-header-group; }
+    #cetak tr { break-inside: avoid; }
+    #cetak tr.sub td { font-weight: 700; background: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    #cetak tr.off td { color: #555; font-style: italic; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="head-top">
+      <div class="brand">
+        <img class="logo" src="assets/logo.png" alt="Logo SK Seri Jaya" width="64" height="64">
+        <div>
+          <h1>SISTEM MAKLUMAT KELAS</h1>
+          <p id="sekolah">Paparan Guru Kelas</p>
+        </div>
+      </div>
+      <div class="jam" role="timer" aria-label="Tarikh dan masa semasa">
+        <div class="tkh" id="tarikh"></div>
+        <div class="msa" id="masa"></div>
+      </div>
+    </div>
+    <nav role="tablist" aria-label="Menu utama">
+      <button role="tab" id="t-murid" aria-controls="p-murid" aria-selected="true">Maklumat Kelas</button>
+      <button role="tab" id="t-admin" aria-controls="p-admin" aria-selected="false">Admin</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="banner"></div>
+
+  <!-- ===== Tab: Maklumat Murid ===== -->
+  <section id="p-murid" role="tabpanel" aria-labelledby="t-murid"></section>
+
+  <!-- ===== Tab: Admin ===== -->
+  <section id="p-admin" role="tabpanel" aria-labelledby="t-admin" hidden>
+    <div id="login" class="card login">
+      <h2>Log masuk Admin</h2>
+      <form id="login-form" autocomplete="off">
+        <input type="password" id="pw" placeholder="Kata laluan" aria-label="Kata laluan admin" required>
+        <button class="btn primary" type="submit">Masuk</button>
+      </form>
+      <p class="msg" id="login-msg" role="alert"></p>
+    </div>
+
+    <div id="panel" class="stack" hidden>
+      <div class="card">
+        <div class="adm-head">
+          <h2>Muat naik senarai murid</h2>
+          <button class="btn" id="logout" type="button">Log keluar</button>
+        </div>
+        <label class="drop" id="drop">
+          <input type="file" id="file" accept=".xlsx,.xls">
+          <strong>Klik di sini atau seret fail Excel (.xlsx) ke sini</strong>
+          Fail dibaca dan dianalisis serta-merta. Data lama akan diganti.
+        </label>
+        <div id="result" role="status"></div>
+      </div>
+      <div class="card">
+        <h2>Data semasa dalam sistem</h2>
+        <div id="current"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap">Mohd Shahril | SK Seri Jaya | Terengganu</div></footer>
+
+<dialog id="dlg" aria-labelledby="dlg-title"></dialog>
+<div id="cetak" aria-hidden="true"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="firebase-config.js"></script>
+<script src="parser.js"></script>
+<script type="module">
+const ADMIN_PASSWORD = 'sksj';
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const BULAN = ['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
+const namaTahun = (t) => t === 0 ? 'Prasekolah' : t === 99 ? 'Lain-lain' : 'Tahun ' + t;
+const aktif = (m) => !m.status || m.status === 'BERSEKOLAH';
+const fmtTarikh = (ymd) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(ymd || ''); return m ? `${+m[3]} ${BULAN[+m[2] - 1]} ${m[1]}` : ''; };
+const fmtMasa = (iso) => { const d = new Date(iso); return isNaN(d) ? '' : `${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+
+/* ---------- Storan: Firebase Firestore (atau mod ujian setempat) ---------- */
+const cfg = window.FIREBASE_CONFIG || {};
+const firebaseSedia = !!cfg.apiKey && !/^ISI_/.test(cfg.apiKey) && !/^ISI_/.test(cfg.projectId || '');
+let store;
+
+if (firebaseSedia) {
+  const V = '12.19.0';
+  const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
+  const { getFirestore, doc, onSnapshot, setDoc } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`);
+  const ref = doc(getFirestore(initializeApp(cfg)), 'data', 'murid');
+  store = {
+    mode: 'firebase',
+    subscribe: (cb, onErr) => onSnapshot(ref, (s) => cb(s.exists() ? s.data() : null), onErr),
+    save: (d) => setDoc(ref, d)
+  };
+} else {
+  const KEY = 'smm_data_ujian';
+  const baca = () => { try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } };
+  const subs = new Set();
+  window.addEventListener('storage', () => subs.forEach((cb) => cb(baca())));
+  store = {
+    mode: 'ujian',
+    subscribe: (cb) => { subs.add(cb); cb(baca()); },
+    save: async (d) => { localStorage.setItem(KEY, JSON.stringify(d)); subs.forEach((cb) => cb(d)); }
+  };
+}
+
+/* ---------- Analisis ---------- */
+function analisis(data) {
+  const kelasMap = new Map();
+  let l = 0, p = 0;
+  for (const m of data.murid) {
+    const key = m.t + '|' + m.kelas;
+    if (!kelasMap.has(key)) kelasMap.set(key, { key, t: m.t, kelas: m.kelas, murid: [], l: 0, p: 0, jumlah: 0 });
+    const k = kelasMap.get(key);
+    k.murid.push(m);
+    if (!aktif(m)) continue;
+    k.jumlah++;
+    if (m.j === 'L') { k.l++; l++; } else if (m.j === 'P') { k.p++; p++; }
+  }
+  const kelas = [...kelasMap.values()].sort((a, b) => a.t - b.t || a.kelas.localeCompare(b.kelas, 'ms'));
+  const tahun = new Map();
+  for (const k of kelas) {
+    if (!tahun.has(k.t)) tahun.set(k.t, { t: k.t, kelas: [], jumlah: 0, l: 0, p: 0 });
+    const g = tahun.get(k.t);
+    g.kelas.push(k); g.jumlah += k.jumlah; g.l += k.l; g.p += k.p;
+  }
+  return { jumlah: l + p + data.murid.filter((m) => aktif(m) && m.j === '?').length, l, p, kelas, tahun: [...tahun.values()] };
+}
+
+/* ---------- Paparan: Maklumat Murid ---------- */
+let data = null, A = null, tapisTahun = 'semua', carian = '';
+
+function paparMurid() {
+  const el = $('#p-murid');
+  if (!data) {
+    el.innerHTML = `<div class="card empty"><strong>Belum ada data murid.</strong><br>Admin perlu memuat naik senarai murid di tab Admin.</div>`;
+    return;
+  }
+  const { jumlah, l, p } = A;
+  const pct = (n) => jumlah ? (n / jumlah * 100).toFixed(1) : '0.0';
+  const tarikh = fmtTarikh(data.tarikhData);
+  el.innerHTML = `
+    <p class="asof">${tarikh ? `Data setakat <strong>${tarikh}</strong>` : 'Data terkini'}${data.dikemaskini ? ` · dikemas kini ${fmtMasa(data.dikemaskini)}` : ''}</p>
+    <div class="tiles">
+      <div class="tile"><div class="lbl">Jumlah murid</div><div class="num">${jumlah}</div><div class="sub">${A.kelas.length} kelas</div></div>
+      <div class="tile l"><div class="lbl">Lelaki</div><div class="num">${l}</div><div class="sub">${pct(l)}%</div></div>
+      <div class="tile p"><div class="lbl">Perempuan</div><div class="num">${p}</div><div class="sub">${pct(p)}%</div></div>
+    </div>
+    <div class="bar" role="img" aria-label="Nisbah lelaki ${pct(l)}% dan perempuan ${pct(p)}%"><i class="l" style="width:${pct(l)}%"></i><i class="p" style="width:${pct(p)}%"></i></div>
+    <div class="tools">
+      <button class="chip" data-tahun="semua" aria-pressed="${tapisTahun === 'semua'}">Semua (${jumlah})</button>
+      ${A.tahun.map((g) => `<button class="chip" data-tahun="${g.t}" aria-pressed="${tapisTahun === String(g.t)}">${namaTahun(g.t)} (${g.jumlah})</button>`).join('')}
+      <button class="btn primary" id="btn-eksport" type="button">Cetak / Muat turun</button>
+      <input type="search" id="cari" placeholder="Cari nama murid atau kelas…" aria-label="Cari nama murid atau kelas" value="${esc(carian)}">
+    </div>
+    <div id="hasil"></div>
+    <div id="senarai"></div>`;
+  el.querySelectorAll('.chip').forEach((b) => b.onclick = () => { tapisTahun = b.dataset.tahun; paparMurid(); });
+  $('#btn-eksport').onclick = () => bukaEksport(tapisTahun === 'semua' ? 'semua' : 't:' + tapisTahun);
+  $('#cari').oninput = (e) => { carian = e.target.value; paparSenarai(); };
+  paparSenarai();
+}
+
+const HAD_HASIL = 100;
+
+function paparHasilMurid(q) {
+  const box = $('#hasil');
+  const kata = q.split(/\s+/).filter(Boolean);
+  if (!kata.length) { box.innerHTML = ''; return 0; }
+  // Carian nama merentas semua kelas; setiap perkataan mesti ada dalam nama (susunan bebas).
+  const padan = data.murid.filter((m) => { const n = m.nama.toLowerCase(); return kata.every((w) => n.includes(w)); })
+    .sort((a, b) => a.nama.localeCompare(b.nama, 'ms'));
+  if (!padan.length) { box.innerHTML = ''; return 0; }
+  const tunjuk = padan.slice(0, HAD_HASIL);
+  box.innerHTML = `
+    <div class="grp"><h2>Murid dijumpai</h2><span>${padan.length} murid${padan.length > HAD_HASIL ? ` (dipaparkan ${HAD_HASIL} pertama, sila kecilkan carian)` : ''}</span></div>
+    <div class="card tbl" style="padding:0"><table class="resp">
+      <thead><tr><th class="num">Bil.</th><th>ID Murid</th><th>Nama</th><th>No. KP</th><th>Status</th><th>Nama Kelas</th><th>Jantina</th></tr></thead>
+      <tbody>${tunjuk.map((m, i) => `<tr class="${aktif(m) ? '' : 'off'}">
+        <td class="num" data-l="Bil.">${i + 1}</td><td data-l="ID Murid">${esc(m.id)}</td><td class="nama">${esc(m.nama)}</td><td data-l="No. KP">${esc(m.kp)}</td>
+        <td data-l="Status"><span class="badge ${aktif(m) ? '' : 'off'}">${esc(m.status || '-')}</span></td>
+        <td data-l="Nama Kelas"><button class="link" type="button" data-key="${esc(m.t + '|' + m.kelas)}" title="Buka senarai kelas">${esc(m.kelas)}</button></td>
+        <td data-l="Jantina" class="${m.j === 'L' ? 'jl' : m.j === 'P' ? 'jp' : ''}">${teksJantina(m.j)}</td></tr>`).join('')}</tbody>
+    </table></div>`;
+  box.querySelectorAll('.link').forEach((b) => b.onclick = () => bukaKelas(b.dataset.key));
+  return padan.length;
+}
+
+function paparSenarai() {
+  const q = carian.trim().toLowerCase();
+  const nMurid = paparHasilMurid(q);
+  const html = A.tahun
+    .filter((g) => tapisTahun === 'semua' || String(g.t) === tapisTahun)
+    .map((g) => {
+      const ks = g.kelas.filter((k) => !q || k.kelas.toLowerCase().includes(q));
+      if (!ks.length) return '';
+      return `<div class="grp"><h2>${namaTahun(g.t)}</h2><span>${g.jumlah} murid · ${g.l} lelaki · ${g.p} perempuan</span></div>
+        <div class="grid">${ks.map((k) => `
+          <button class="kelas" data-key="${esc(k.key)}">
+            <div class="nm">${esc(k.kelas)}</div>
+            <div class="tot">${k.jumlah} <small>murid</small></div>
+            <div class="lp"><span class="l">Lelaki ${k.l}</span><span class="p">Perempuan ${k.p}</span></div>
+          </button>`).join('')}</div>`;
+    }).join('');
+  const box = $('#senarai');
+  box.innerHTML = html || (nMurid ? '' : '<div class="empty">Tiada murid atau kelas sepadan.</div>');
+  box.querySelectorAll('.kelas').forEach((b) => b.onclick = () => bukaKelas(b.dataset.key));
+}
+
+const muridUrut = (k) => [...k.murid].sort((a, b) => a.nama.localeCompare(b.nama, 'ms'));
+const teksJantina = (j) => j === 'L' ? 'LELAKI' : j === 'P' ? 'PEREMPUAN' : '-';
+const TAJUK_LAJUR = ['BIL.', 'ID MURID', 'NAMA', 'NO. KP', 'STATUS', 'NAMA KELAS', 'JANTINA'];
+
+function bukaDialog(html) {
+  const dlg = $('#dlg');
+  dlg.innerHTML = html;
+  dlg.onclick = (e) => { if (e.target === dlg) dlg.close(); };
+  const t = $('#tutup'); if (t) t.onclick = () => dlg.close();
+  dlg.showModal();
+  return dlg;
+}
+
+function bukaKelas(key) {
+  const k = A.kelas.find((x) => x.key === key);
+  if (!k) return;
+  const murid = muridUrut(k);
+  const dlg = bukaDialog(`
+    <div class="dlg-h">
+      <h2 id="dlg-title">${esc(k.kelas)}</h2>
+      <span class="meta">${k.jumlah} murid · <span class="l">Lelaki ${k.l}</span> · <span class="p">Perempuan ${k.p}</span></span>
+      <div class="acts multi">
+        <button class="btn" id="k-cetak" type="button">Cetak PDF</button>
+        <button class="btn" id="k-xlsx" type="button">Muat turun Excel</button>
+        <button class="btn" id="tutup" type="button">Tutup</button>
+      </div>
+    </div>
+    <div class="tbl"><table class="resp">
+      <thead><tr><th class="num">Bil.</th><th>ID Murid</th><th>Nama</th><th>No. KP</th><th>Status</th><th>Nama Kelas</th><th>Jantina</th></tr></thead>
+      <tbody>${murid.map((m, i) => `<tr class="${aktif(m) ? '' : 'off'}">
+        <td class="num" data-l="Bil.">${i + 1}</td><td data-l="ID Murid">${esc(m.id)}</td><td class="nama">${esc(m.nama)}</td><td data-l="No. KP">${esc(m.kp)}</td>
+        <td data-l="Status"><span class="badge ${aktif(m) ? '' : 'off'}">${esc(m.status || '-')}</span></td><td data-l="Nama Kelas">${esc(m.kelas)}</td>
+        <td data-l="Jantina" class="${m.j === 'L' ? 'jl' : m.j === 'P' ? 'jp' : ''}">${teksJantina(m.j)}</td></tr>`).join('')}</tbody>
+    </table></div>`);
+  $('#k-cetak').onclick = () => cetak([k], 'senarai');
+  $('#k-xlsx').onclick = () => muatTurun([k], 'senarai', k.kelas);
+}
+
+/* ---------- Cetak / Muat turun ---------- */
+const kelasSkop = (skop) =>
+  skop === 'semua' ? A.kelas
+  : skop.startsWith('t:') ? A.kelas.filter((k) => String(k.t) === skop.slice(2))
+  : A.kelas.filter((k) => k.key === skop.slice(2));
+const namaSkop = (skop) =>
+  skop === 'semua' ? 'Semua murid'
+  : skop.startsWith('t:') ? namaTahun(+skop.slice(2))
+  : (A.kelas.find((k) => k.key === skop.slice(2)) || {}).kelas || '';
+const jumlahKelas = (ks) => ks.reduce((s, k) => ({ l: s.l + k.l, p: s.p + k.p, jumlah: s.jumlah + k.jumlah }), { l: 0, p: 0, jumlah: 0 });
+const kumpulTahun = (ks) => A.tahun.map((g) => ({ t: g.t, kelas: g.kelas.filter((k) => ks.includes(k)) })).filter((g) => g.kelas.length);
+
+function bukaEksport(skopAwal) {
+  bukaDialog(`
+    <div class="dlg-h"><h2 id="dlg-title">Cetak / Muat turun</h2>
+      <div class="acts"><button class="btn" id="tutup" type="button">Tutup</button></div></div>
+    <div class="dlg-b">
+      <div class="fld"><label for="e-skop">Skop</label>
+        <select id="e-skop">
+          <option value="semua">Semua murid (${A.jumlah})</option>
+          <optgroup label="Mengikut tahun">${A.tahun.map((g) => `<option value="t:${g.t}">${namaTahun(g.t)} (${g.jumlah})</option>`).join('')}</optgroup>
+          <optgroup label="Mengikut kelas">${A.kelas.map((k) => `<option value="k:${esc(k.key)}">${esc(k.kelas)} (${k.jumlah})</option>`).join('')}</optgroup>
+        </select></div>
+      <div class="fld"><span class="lbl">Kandungan</span>
+        <label class="opt"><input type="radio" name="e-jenis" value="senarai" checked> Senarai nama murid (BIL, ID MURID, NAMA, NO. KP, STATUS, NAMA KELAS, JANTINA)</label>
+        <label class="opt" id="e-ring"><input type="radio" name="e-jenis" value="ringkasan"> Ringkasan bilangan (lelaki / perempuan / jumlah setiap kelas)</label>
+        <p class="hint" id="e-nota"></p></div>
+      <div class="acts-row">
+        <button class="btn primary" id="e-cetak" type="button">Cetak PDF</button>
+        <button class="btn" id="e-xlsx" type="button">Muat turun Excel</button>
+      </div>
+    </div>`);
+  const sel = $('#e-skop');
+  sel.value = skopAwal;
+  const jenis = () => document.querySelector('input[name="e-jenis"]:checked').value;
+  const segar = () => {
+    const kelasSahaja = sel.value.startsWith('k:');
+    $('#e-ring').classList.toggle('dis', kelasSahaja);
+    $('#e-ring input').disabled = kelasSahaja;
+    if (kelasSahaja) document.querySelector('input[name="e-jenis"][value="senarai"]').checked = true;
+    const ks = kelasSkop(sel.value);
+    $('#e-nota').textContent = jenis() === 'senarai'
+      ? `${ks.length} kelas · ${ks.reduce((s, k) => s + k.murid.length, 0)} murid dalam senarai. Cetakan: satu kelas satu halaman.`
+      : `${ks.length} kelas · satu jadual ringkasan.`;
+  };
+  sel.onchange = segar;
+  document.querySelectorAll('input[name="e-jenis"]').forEach((r) => r.onchange = segar);
+  $('#e-cetak').onclick = () => cetak(kelasSkop(sel.value), jenis(), namaSkop(sel.value));
+  $('#e-xlsx').onclick = () => muatTurun(kelasSkop(sel.value), jenis(), namaSkop(sel.value));
+  segar();
+}
+
+function kepalaCetak(subtajuk) {
+  const tarikh = fmtTarikh(data.tarikhData);
+  return `<div class="kp"><img src="assets/logo.png" alt=""><div><h1>${esc(data.sekolah || 'Sekolah')}${data.kod ? ` (${esc(data.kod)})` : ''}</h1><h2>${subtajuk}</h2>
+    <p>${tarikh ? `Data setakat ${tarikh} · ` : ''}Dicetak ${fmtMasa(new Date().toISOString())}</p></div></div>`;
+}
+
+function cetak(ks, jenis, nama) {
+  if (!ks.length) return;
+  let html;
+  if (jenis === 'ringkasan') {
+    const baris = (n, r, cls = '') => `<tr class="${cls}"><td>${esc(n)}</td><td class="num">${r.l}</td><td class="num">${r.p}</td><td class="num">${r.jumlah}</td></tr>`;
+    const badan = kumpulTahun(ks).map((g) =>
+      g.kelas.map((k) => baris(k.kelas, k)).join('') + baris('Jumlah ' + namaTahun(g.t), jumlahKelas(g.kelas), 'sub')).join('');
+    html = `<section class="pg">${kepalaCetak('Ringkasan Bilangan Murid — ' + esc(nama || 'Semua murid'))}
+      <table><thead><tr><th>Kelas</th><th class="num">Lelaki</th><th class="num">Perempuan</th><th class="num">Jumlah</th></tr></thead>
+      <tbody>${badan}${baris('JUMLAH KESELURUHAN', jumlahKelas(ks), 'sub')}</tbody></table></section>`;
+  } else {
+    html = ks.map((k) => `<section class="pg">${kepalaCetak('Senarai Murid — ' + esc(k.kelas))}
+      <p class="ct">Jumlah ${k.jumlah} murid · Lelaki ${k.l} · Perempuan ${k.p}</p>
+      <table><thead><tr>${TAJUK_LAJUR.map((t, i) => `<th${i === 0 ? ' class="num"' : ''}>${t}</th>`).join('')}</tr></thead>
+      <tbody>${muridUrut(k).map((m, i) => `<tr class="${aktif(m) ? '' : 'off'}"><td class="num">${i + 1}</td><td>${esc(m.id)}</td><td>${esc(m.nama)}</td><td>${esc(m.kp)}</td><td>${esc(m.status || '-')}</td><td>${esc(m.kelas)}</td><td>${teksJantina(m.j)}</td></tr>`).join('')}</tbody></table></section>`).join('');
+  }
+  $('#cetak').innerHTML = html;
+  window.print();
+}
+
+function muatTurun(ks, jenis, nama) {
+  if (!ks.length) return;
+  if (typeof XLSX === 'undefined') { alert('Pustaka Excel gagal dimuatkan. Semak sambungan internet dan cuba semula.'); return; }
+  const wb = XLSX.utils.book_new();
+  const guna = new Set();
+  const namaLembaran = (s) => {
+    const asas = s.replace(/[\\\/?*\[\]:]/g, ' ').trim().slice(0, 28) || 'Lembaran';
+    let n = asas, i = 2;
+    while (guna.has(n.toLowerCase())) n = asas + ' ' + i++;
+    guna.add(n.toLowerCase());
+    return n;
+  };
+  const tambah = (tajuk, aoa, lebar) => {
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = lebar.map((wch) => ({ wch }));
+    XLSX.utils.book_append_sheet(wb, ws, namaLembaran(tajuk));
+  };
+  if (jenis === 'ringkasan' || ks.length > 1) {
+    const aoa = [['KELAS', 'LELAKI', 'PEREMPUAN', 'JUMLAH']];
+    for (const g of kumpulTahun(ks)) {
+      g.kelas.forEach((k) => aoa.push([k.kelas, k.l, k.p, k.jumlah]));
+      const t = jumlahKelas(g.kelas); aoa.push(['Jumlah ' + namaTahun(g.t), t.l, t.p, t.jumlah]);
+    }
+    const t = jumlahKelas(ks); aoa.push(['JUMLAH KESELURUHAN', t.l, t.p, t.jumlah]);
+    tambah('Ringkasan', aoa, [32, 10, 12, 10]);
+  }
+  if (jenis === 'senarai') {
+    for (const k of ks) {
+      tambah(k.kelas, [TAJUK_LAJUR, ...muridUrut(k).map((m, i) => [i + 1, m.id, m.nama, m.kp, m.status, m.kelas, teksJantina(m.j)])], [6, 14, 44, 15, 13, 26, 12]);
+    }
+  }
+  const tarikh = data.tarikhData || new Date().toISOString().slice(0, 10);
+  const fail = `${jenis === 'senarai' ? 'Senarai Murid' : 'Ringkasan Murid'} - ${(nama || 'Semua murid').replace(/[\\\/:*?"<>|]/g, ' ')} - ${tarikh}.xlsx`;
+  XLSX.writeFile(wb, fail);
+}
+
+/* ---------- Paparan: Admin ---------- */
+function paparSemasa() {
+  const el = $('#current');
+  if (!data) { el.innerHTML = '<p class="asof">Belum ada data dimuat naik.</p>'; return; }
+  el.innerHTML = `<dl class="info">
+    <dt>Sekolah</dt><dd>${esc(data.sekolah || '-')} ${data.kod ? `(${esc(data.kod)})` : ''}</dd>
+    <dt>Fail</dt><dd>${esc(data.namaFail || '-')}</dd>
+    <dt>Data setakat</dt><dd>${fmtTarikh(data.tarikhData) || '-'}</dd>
+    <dt>Dimuat naik</dt><dd>${data.dikemaskini ? fmtMasa(data.dikemaskini) : '-'}</dd>
+    <dt>Jumlah murid</dt><dd>${A.jumlah} (Lelaki ${A.l}, Perempuan ${A.p})</dd>
+    <dt>Bilangan kelas</dt><dd>${A.kelas.length}</dd></dl>`;
+}
+
+function setResult(kind, html) { $('#result').innerHTML = html ? `<div class="result ${kind}">${html}</div>` : ''; }
+
+async function uploadFail(file) {
+  if (!file) return;
+  setResult('wait', `Membaca <strong>${esc(file.name)}</strong>…`);
+  try {
+    if (typeof XLSX === 'undefined') throw new Error('Pustaka pembaca Excel gagal dimuatkan. Semak sambungan internet dan cuba semula.');
+    if (!/\.xlsx?$/i.test(file.name)) throw new Error('Sila pilih fail Excel (.xlsx).');
+    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: false });
+    const h = SMM.parse(rows, { fileName: file.name });
+    const doc = { sekolah: h.sekolah, kod: h.kod, tarikhData: h.tarikhData, namaFail: file.name, dikemaskini: new Date().toISOString(), murid: h.murid };
+    await store.save(doc);
+    const a = analisis(doc);
+    let nota = '';
+    if (h.tidakAktif) nota += `<br>${h.tidakAktif} murid berstatus bukan BERSEKOLAH (dipaparkan tetapi tidak dikira dalam jumlah).`;
+    if (h.jantinaLain) nota += `<br>Amaran: ${h.jantinaLain} murid tiada jantina yang sah.`;
+    setResult('ok', `<strong>Berjaya.</strong> ${a.jumlah} murid aktif dalam ${a.kelas.length} kelas — Lelaki ${a.l}, Perempuan ${a.p}.${nota}`);
+  } catch (e) {
+    console.error(e);
+    setResult('err', `<strong>Gagal:</strong> ${esc(e.message || e)}`);
+  } finally {
+    $('#file').value = '';
+  }
+}
+
+/* ---------- Tab, log masuk ---------- */
+function pilihTab(nama) {
+  for (const t of ['murid', 'admin']) {
+    $('#t-' + t).setAttribute('aria-selected', String(t === nama));
+    $('#p-' + t).hidden = t !== nama;
+  }
+}
+const adminMasuk = () => sessionStorage.getItem('smm_admin') === '1';
+function segarAdmin() { $('#login').hidden = adminMasuk(); $('#panel').hidden = !adminMasuk(); }
+
+$('#t-murid').onclick = () => pilihTab('murid');
+$('#t-admin').onclick = () => { pilihTab('admin'); segarAdmin(); };
+$('#login-form').onsubmit = (e) => {
+  e.preventDefault();
+  if ($('#pw').value === ADMIN_PASSWORD) { sessionStorage.setItem('smm_admin', '1'); $('#login-msg').textContent = ''; segarAdmin(); }
+  else $('#login-msg').textContent = 'Kata laluan salah.';
+  $('#pw').value = '';
+};
+$('#logout').onclick = () => { sessionStorage.removeItem('smm_admin'); setResult('', ''); segarAdmin(); };
+$('#file').onchange = (e) => uploadFail(e.target.files[0]);
+const drop = $('#drop');
+['dragenter', 'dragover'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', (e) => uploadFail(e.dataTransfer.files[0]));
+
+/* ---------- Jam & tarikh pada header ---------- */
+const HARI = ['Ahad', 'Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat', 'Sabtu'];
+const dua = (n) => String(n).padStart(2, '0');
+function kemaskiniJam() {
+  const d = new Date();
+  $('#tarikh').textContent = `${HARI[d.getDay()]}, ${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`;
+  $('#masa').textContent = `${dua(d.getHours())}:${dua(d.getMinutes())}:${dua(d.getSeconds())}`;
+}
+kemaskiniJam();
+setInterval(kemaskiniJam, 1000);
+
+/* ---------- Mula ---------- */
+if (store.mode === 'ujian') $('#banner').innerHTML = '<div class="banner"><strong>Mod ujian:</strong> Firebase belum disediakan, data disimpan dalam pelayar ini sahaja. Isi <code>firebase-config.js</code> supaya semua guru boleh melihat data yang sama.</div>';
+
+store.subscribe((d) => {
+  data = d; A = d ? analisis(d) : null;
+  if (d && d.sekolah) $('#sekolah').textContent = `${d.sekolah}${d.kod ? ' · ' + d.kod : ''} — Paparan Guru Kelas`;
+  paparMurid(); paparSemasa();
+}, (err) => {
+  console.error(err);
+  $('#banner').innerHTML = `<div class="banner err"><strong>Tidak dapat menyambung ke Firebase:</strong> ${esc(err.code || err.message)}. Semak config dan peraturan Firestore.</div>`;
+});
+segarAdmin();
+</script>
+</body>
+</html>
