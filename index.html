@@ -194,7 +194,7 @@
     #cetak .pg { break-after: page; }
     #cetak .pg:last-child { break-after: auto; }
     #cetak .kp { display: flex; align-items: center; gap: 10px; }
-    #cetak .kp img { width: 46px; height: 46px; }
+    #cetak .kp img { width: 46px; height: 46px; flex: none; }
     #cetak h1 { font-size: 15px; margin: 0; }
     #cetak h2 { font-size: 13px; margin: 2px 0; }
     #cetak p { margin: 2px 0; font-size: 10px; color: #333; }
@@ -513,11 +513,11 @@ function bukaEksport(skopAwal) {
 
 function kepalaCetak(subtajuk) {
   const tarikh = fmtTarikh(data.tarikhData);
-  return `<div class="kp"><img src="assets/logo.png" alt=""><div><h1>${esc(data.sekolah || 'Sekolah')}${data.kod ? ` (${esc(data.kod)})` : ''}</h1><h2>${subtajuk}</h2>
+  return `<div class="kp"><img src="assets/logo.png" alt="" width="46" height="46" loading="eager" decoding="sync"><div><h1>${esc(data.sekolah || 'Sekolah')}${data.kod ? ` (${esc(data.kod)})` : ''}</h1><h2>${subtajuk}</h2>
     <p>${tarikh ? `Data setakat ${tarikh} · ` : ''}Dicetak ${fmtMasa(new Date().toISOString())}</p></div></div>`;
 }
 
-function cetak(ks, jenis, nama) {
+async function cetak(ks, jenis, nama) {
   if (!ks.length) return;
   let html;
   if (jenis === 'ringkasan') {
@@ -533,7 +533,12 @@ function cetak(ks, jenis, nama) {
       <table><thead><tr>${TAJUK_LAJUR.map((t, i) => `<th${i === 0 ? ' class="num"' : ''}>${t}</th>`).join('')}</tr></thead>
       <tbody>${muridUrut(k).map((m, i) => `<tr class="${aktif(m) ? '' : 'off'}"><td class="num">${i + 1}</td><td>${esc(m.id)}</td><td>${esc(m.nama)}</td><td>${esc(m.kp)}</td><td>${esc(m.status || '-')}</td><td>${esc(m.kelas)}</td><td>${teksJantina(m.j)}</td></tr>`).join('')}</tbody></table></section>`).join('');
   }
-  $('#cetak').innerHTML = html;
+  const kotak = $('#cetak');
+  kotak.innerHTML = html;
+  // Tunggu semua logo siap dimuat & dinyahkod dahulu; jika tidak, sesetengah halaman tercetak tanpa logo.
+  const siap = Promise.all([...kotak.querySelectorAll('img')].map((im) => im.decode().catch(() => {})));
+  await Promise.race([siap, new Promise((r) => setTimeout(r, 3000))]); // had masa: jangan sampai cetakan tersekat
+  await new Promise((r) => setTimeout(r, 100)); // beri masa pelayar melukis semula sebelum tangkapan cetak
   window.print();
 }
 
