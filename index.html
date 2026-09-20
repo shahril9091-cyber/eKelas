@@ -95,6 +95,11 @@
   .tools .btn + input[type=search] { margin-left: 0; }
   .btn { appearance: none; font: inherit; font-weight: 600; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 8px 14px; border-radius: 8px; cursor: pointer; }
   .btn.primary { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+  .btn.pdf { background: #1d4ed8; color: #ffffff; border-color: #1d4ed8; }
+  .btn.xls { background: #15803d; color: #ffffff; border-color: #15803d; }
+  .btn.tutup { background: #b91c1c; color: #ffffff; border-color: #b91c1c; }
+  .btn.pdf:hover, .btn.xls:hover, .btn.tutup:hover { filter: brightness(1.12); }
+  .btn.pdf:active, .btn.xls:active, .btn.tutup:active { filter: brightness(.92); }
   .tbl { overflow-x: auto; }
   table { border-collapse: collapse; width: 100%; font-size: .9rem; }
   th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
@@ -443,9 +448,9 @@ function bukaKelas(key) {
       <h2 id="dlg-title">${esc(k.kelas)}</h2>
       <span class="meta">${k.jumlah} murid · <span class="l">Lelaki ${k.l}</span> · <span class="p">Perempuan ${k.p}</span></span>
       <div class="acts multi">
-        <button class="btn" id="k-cetak" type="button">Cetak PDF</button>
-        <button class="btn" id="k-xlsx" type="button">Muat turun Excel</button>
-        <button class="btn" id="tutup" type="button">Tutup</button>
+        <button class="btn pdf" id="k-cetak" type="button">Cetak PDF</button>
+        <button class="btn xls" id="k-xlsx" type="button">Muat turun Excel</button>
+        <button class="btn tutup" id="tutup" type="button">Tutup</button>
       </div>
     </div>
     <div class="tbl"><table class="resp">
@@ -474,7 +479,7 @@ const kumpulTahun = (ks) => A.tahun.map((g) => ({ t: g.t, kelas: g.kelas.filter(
 function bukaEksport(skopAwal) {
   bukaDialog(`
     <div class="dlg-h"><h2 id="dlg-title">Cetak / Muat turun</h2>
-      <div class="acts"><button class="btn" id="tutup" type="button">Tutup</button></div></div>
+      <div class="acts"><button class="btn tutup" id="tutup" type="button">Tutup</button></div></div>
     <div class="dlg-b">
       <div class="fld"><label for="e-skop">Skop</label>
         <select id="e-skop">
@@ -487,8 +492,8 @@ function bukaEksport(skopAwal) {
         <label class="opt" id="e-ring"><input type="radio" name="e-jenis" value="ringkasan"> Ringkasan bilangan (lelaki / perempuan / jumlah setiap kelas)</label>
         <p class="hint" id="e-nota"></p></div>
       <div class="acts-row">
-        <button class="btn primary" id="e-cetak" type="button">Cetak PDF</button>
-        <button class="btn" id="e-xlsx" type="button">Muat turun Excel</button>
+        <button class="btn pdf" id="e-cetak" type="button">Cetak PDF</button>
+        <button class="btn xls" id="e-xlsx" type="button">Muat turun Excel</button>
       </div>
     </div>`);
   const sel = $('#e-skop');
