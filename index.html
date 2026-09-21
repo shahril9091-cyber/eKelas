@@ -663,7 +663,7 @@ const dua = (n) => String(n).padStart(2, '0');
 function kemaskiniJam() {
   const d = new Date();
   $('#tarikh').textContent = `${HARI[d.getDay()]}, ${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`;
-  $('#masa').textCsssontent = `${dua(d.getHours())}:${dua(d.getMinutes())}:${dua(d.getSeconds())}`;
+  $('#masa').textContent = `${dua(d.getHours())}:${dua(d.getMinutes())}:${dua(d.getSeconds())}`;
 }
 kemaskiniJam();
 setInterval(kemaskiniJam, 1000);
