@@ -92,6 +92,7 @@
   .dlg-h .meta { color: var(--muted); font-size: .9rem; font-variant-numeric: tabular-nums; }
   .dlg-h .meta .l { color: var(--lelaki); } .dlg-h .meta .p { color: var(--perempuan); }
   .dlg-h .acts { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px; }
+  .dlg-h .cari-kelas { flex: 1 1 100%; margin-top: 2px; }
   .dlg-b { padding: 18px 20px 22px; display: grid; gap: 16px; }
   .fld > label, .fld > .lbl { display: block; font-weight: 600; margin-bottom: 6px; }
   .fld select { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
@@ -449,10 +450,17 @@ function bukaDialog(html) {
   return dlg;
 }
 
+function barisMurid(list) {
+  return list.map((m, i) => `<tr class="${aktif(m) ? '' : 'off'}">
+        <td class="num" data-l="Bil.">${i + 1}</td><td data-l="ID Murid">${esc(m.id)}</td><td class="nama">${esc(m.nama)}</td><td data-l="No. KP">${esc(m.kp)}</td>
+        <td data-l="Status"><span class="badge ${aktif(m) ? '' : 'off'}">${esc(m.status || '-')}</span></td><td data-l="Nama Kelas">${esc(m.kelas)}</td>
+        <td data-l="Jantina" class="${m.j === 'L' ? 'jl' : m.j === 'P' ? 'jp' : ''}">${teksJantina(m.j)}</td></tr>`).join('');
+}
+
 function bukaKelas(key) {
   const k = A.kelas.find((x) => x.key === key);
   if (!k) return;
-  const murid = muridUrut(k);
+  const semuaMurid = muridUrut(k);
   const dlg = bukaDialog(`
     <div class="dlg-h">
       <h2 id="dlg-title">${esc(k.kelas)}</h2>
@@ -462,16 +470,19 @@ function bukaKelas(key) {
         <button class="btn xls" id="k-xlsx" type="button">Muat turun Excel</button>
         <button class="btn tutup" id="tutup" type="button">Tutup</button>
       </div>
+      <input type="search" id="k-cari" class="cari-kelas" placeholder="Cari nama murid dalam kelas ${esc(k.kelas)}…" aria-label="Cari nama murid dalam kelas ${esc(k.kelas)}">
     </div>
     <div class="tbl"><table class="resp">
       <thead><tr><th class="num">Bil.</th><th>ID Murid</th><th>Nama</th><th>No. KP</th><th>Status</th><th>Nama Kelas</th><th>Jantina</th></tr></thead>
-      <tbody>${murid.map((m, i) => `<tr class="${aktif(m) ? '' : 'off'}">
-        <td class="num" data-l="Bil.">${i + 1}</td><td data-l="ID Murid">${esc(m.id)}</td><td class="nama">${esc(m.nama)}</td><td data-l="No. KP">${esc(m.kp)}</td>
-        <td data-l="Status"><span class="badge ${aktif(m) ? '' : 'off'}">${esc(m.status || '-')}</span></td><td data-l="Nama Kelas">${esc(m.kelas)}</td>
-        <td data-l="Jantina" class="${m.j === 'L' ? 'jl' : m.j === 'P' ? 'jp' : ''}">${teksJantina(m.j)}</td></tr>`).join('')}</tbody>
+      <tbody id="k-tbody">${barisMurid(semuaMurid)}</tbody>
     </table></div>`);
   $('#k-cetak').onclick = () => cetak([k], 'senarai');
   $('#k-xlsx').onclick = () => muatTurun([k], 'senarai', k.kelas);
+  $('#k-cari').oninput = (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    const list = q ? semuaMurid.filter((m) => m.nama.toLowerCase().includes(q)) : semuaMurid;
+    $('#k-tbody').innerHTML = list.length ? barisMurid(list) : '<tr><td colspan="7" class="empty">Tiada murid sepadan.</td></tr>';
+  };
 }
 
 /* ---------- Cetak / Muat turun ---------- */
