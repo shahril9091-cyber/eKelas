@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="only light">
 <meta name="supported-color-schemes" content="light">
-<title>SISTEM MAKLUMAT KELAS</title>
+<title>DASHBOARD MAKLUMAT KELAS</title>
 <link rel="icon" type="image/png" href="assets/logo.png">
 <style>
   :root {
@@ -232,8 +232,8 @@
       <div class="brand">
         <img class="logo" src="assets/logo.png" alt="Logo SK Seri Jaya" width="64" height="64">
         <div>
-          <h1>SISTEM MAKLUMAT KELAS</h1>
-          <p id="sekolah">Paparan Guru Kelas</p>
+          <h1>DASHBOARD MAKLUMAT KELAS</h1>
+          <p id="sekolah"></p>
         </div>
       </div>
       <div class="jam" role="timer" aria-label="Tarikh dan masa semasa">
@@ -684,7 +684,7 @@ if (store.mode === 'ujian') $('#banner').innerHTML = '<div class="banner"><stron
 
 store.subscribe((d) => {
   data = d; A = d ? analisis(d) : null;
-  if (d && d.sekolah) $('#sekolah').textContent = `${d.sekolah}${d.kod ? ' · ' + d.kod : ''} — Paparan Guru Kelas`;
+  if (d && d.sekolah) $('#sekolah').textContent = `${d.sekolah}${d.kod ? ' · ' + d.kod : ''}`;
   paparMurid(); paparSemasa();
 }, (err) => {
   console.error(err);
