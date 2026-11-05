@@ -246,7 +246,7 @@
     </div>
     <nav role="tablist" aria-label="Menu utama">
       <button role="tab" id="t-murid" aria-controls="p-murid" aria-selected="true">Maklumat Kelas</button>
-      <button role="tab" id="t-admin" aria-controls="p-admin" aria-selected="false">Admin</button>
+      <button role="tab" id="t-admin" aria-controls="p-admin" aria-selected="false">Tetapan</button>
     </nav>
   </div>
 </header>
@@ -260,9 +260,9 @@
   <!-- ===== Tab: Admin ===== -->
   <section id="p-admin" role="tabpanel" aria-labelledby="t-admin" hidden>
     <div id="login" class="card login">
-      <h2>Log masuk Admin</h2>
+      <h2>Log masuk Tetapan</h2>
       <form id="login-form" autocomplete="off">
-        <input type="password" id="pw" placeholder="Kata laluan" aria-label="Kata laluan admin" required>
+        <input type="password" id="pw" placeholder="Kata laluan" aria-label="Kata laluan Tetapan" required>
         <button class="btn primary" type="submit">Masuk</button>
       </form>
       <p class="msg" id="login-msg" role="alert"></p>
@@ -284,6 +284,8 @@
       <div class="card">
         <h2>Data semasa dalam sistem</h2>
         <div id="current"></div>
+        <button class="btn xls" id="download-original" type="button" disabled>Muat turun fail asal</button>
+        <p class="asof" id="original-info">Fail asal tersedia pada peranti dan pelayar yang digunakan untuk memuat naiknya.</p>
       </div>
     </div>
   </section>
@@ -334,6 +336,53 @@ if (firebaseSedia) {
   };
 }
 
+/* Fail asal disimpan dalam pelayar, berasingan daripada data Firestore. */
+function pangkalanFail() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('smm_fail_asal', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('fail');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function urusFail(mode, id, fail) {
+  const db = await pangkalanFail();
+  try {
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction('fail', mode === 'get' ? 'readonly' : 'readwrite');
+      const request = mode === 'get' ? tx.objectStore('fail').get(id) : tx.objectStore('fail').put(fail, id);
+      tx.oncomplete = () => resolve(request.result);
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error || new Error('Storan fail dibatalkan.'));
+    });
+  } finally { db.close(); }
+}
+async function semakFailAsal() {
+  const id = data && data.idFailAsal;
+  const button = $('#download-original');
+  button.disabled = true;
+  const info = $('#original-info');
+  info.textContent = 'Fail asal tersedia pada peranti dan pelayar yang digunakan untuk memuat naiknya.';
+  if (!id) { info.textContent = 'Fail asal belum disimpan. Muat naik semula fail untuk membolehkan muat turun.'; return; }
+  try {
+    const fail = await urusFail('get', id);
+    if (!data || data.idFailAsal !== id) return;
+    button.disabled = !fail;
+    if (!fail) info.textContent = 'Fail asal tiada pada pelayar ini. Muat naik semula fail untuk membolehkan muat turun.';
+  } catch { info.textContent = 'Storan fail asal tidak dapat diakses pada pelayar ini.'; }
+}
+$('#download-original').onclick = async () => {
+  try {
+    const id = data && data.idFailAsal;
+    const fail = id && await urusFail('get', id);
+    if (!fail || !data || data.idFailAsal !== id) throw new Error('Fail asal tidak tersedia. Muat naik semula fail.');
+    const url = URL.createObjectURL(fail.blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = fail.nama; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (e) { alert(e.message || 'Fail asal tidak dapat dimuat turun.'); }
+};
+
 /* ---------- Analisis ---------- */
 function analisis(data) {
   const kelasMap = new Map();
@@ -363,7 +412,7 @@ let data = null, A = null, tapisTahun = 'semua', carian = '';
 function paparMurid() {
   const el = $('#p-murid');
   if (!data) {
-    el.innerHTML = `<div class="card empty"><strong>Belum ada data murid.</strong><br>Admin perlu memuat naik senarai murid di tab Admin.</div>`;
+    el.innerHTML = `<div class="card empty"><strong>Belum ada data murid.</strong><br>Muat naik senarai murid di tab Tetapan.</div>`;
     return;
   }
   const { jumlah, l, p } = A;
@@ -631,7 +680,9 @@ async function uploadFail(file) {
     const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
     const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: false });
     const h = SMM.parse(rows, { fileName: file.name });
-    const doc = { sekolah: h.sekolah, kod: h.kod, tarikhData: h.tarikhData, namaFail: file.name, dikemaskini: new Date().toISOString(), murid: h.murid };
+    const idFailAsal = crypto.randomUUID();
+    await urusFail('put', idFailAsal, { nama: file.name, blob: file });
+    const doc = { sekolah: h.sekolah, kod: h.kod, tarikhData: h.tarikhData, namaFail: file.name, idFailAsal, dikemaskini: new Date().toISOString(), murid: h.murid };
     await store.save(doc);
     const a = analisis(doc);
     let nota = '';
@@ -688,7 +739,7 @@ if (store.mode === 'ujian') $('#banner').innerHTML = '<div class="banner"><stron
 store.subscribe((d) => {
   data = d; A = d ? analisis(d) : null;
   if (d && d.sekolah) $('#sekolah').textContent = `${d.sekolah}${d.kod ? ' · ' + d.kod : ''}`;
-  paparMurid(); paparSemasa();
+  paparMurid(); paparSemasa(); semakFailAsal();
 }, (err) => {
   console.error(err);
   $('#banner').innerHTML = `<div class="banner err"><strong>Tidak dapat menyambung ke Firebase:</strong> ${esc(err.code || err.message)}. Semak config dan peraturan Firestore.</div>`;
